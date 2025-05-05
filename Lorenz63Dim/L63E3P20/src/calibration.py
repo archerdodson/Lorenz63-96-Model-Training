@@ -118,54 +118,13 @@ def R2(theta_samples, theta_test):
     theta_approx_means = theta_samples.mean(0)
     return r2_score(theta_test, theta_approx_means, multioutput='raw_values')
 
-def CRPS(theta_samples, theta_test):
-    """
-    Computes the CRPS (Continuous Ranked Probability Score) between samples
-    and ground truth, per parameter.
 
-    ----------
-    Arguments:
-    theta_samples   : np.ndarray of shape (n_samples, n_test, n_params)
-    theta_test      : np.ndarray of shape (n_test, n_params)
-
-    ----------
-    Returns:
-    crps_scores : np.ndarray of shape (n_params,) -- the CRPS per parameter
-    """
-    
-    # Convert to numpy if needed
-    if not isinstance(theta_samples, np.ndarray):
-        theta_samples = theta_samples.numpy()
-    if not isinstance(theta_test, np.ndarray):
-        theta_test = theta_test.numpy()
-
-    
-    stds = theta_test.std(axis=0)
-    print(stds)
-    n_samples, n_test, n_params = theta_samples.shape
-    crps_scores = np.zeros(n_params)
-
-    for p in range(n_params):
-        total_crps = 0.0
-        for t in range(n_test):
-            samples = theta_samples[:, t, p]
-            y_true = theta_test[t, p]
-
-            term1 = np.mean(np.abs(samples - y_true))
-            term2 = 0.5 * np.mean(np.abs(samples[:, None] - samples[None, :]))
-            crps = term1 - term2
-            total_crps += crps
-        crps_scores[p] = total_crps / n_test
-
-    return crps_scores/stds
-
-
-def plot_metrics_params(cal_error_values, rmse_values, r2_values, crps_values, show=False, filename=None, font_size=12):
+def plot_metrics_params(cal_error_values, rmse_values, r2_values, show=False, filename=None, font_size=12):
     """Plots R2 and NRMSE side by side for all parameters over a test set."""
 
     # Plot initialization
     plt.rcParams['font.size'] = font_size
-    f, axarr = plt.subplots(1, 4, figsize=(15, 4))
+    f, axarr = plt.subplots(1, 3, figsize=(15, 4))
 
     n_params = rmse_values.shape[0]
 
@@ -176,9 +135,7 @@ def plot_metrics_params(cal_error_values, rmse_values, r2_values, crps_values, s
     # Plot R2
     axarr[2].plot(np.arange(n_params) + 1, r2_values, "o")
 
-    axarr[3].plot(np.arange(n_params) + 1, crps_values, "o")
-
-    names = ['Cal error', 'NRMSE', '$R^2$', 'NCRPS']
+    names = ['Cal error', 'NRMSE', '$R^2$']
     # Tweak plots
     for i, name in enumerate(names):
         axarr[i].set_xlabel('Parameter #')

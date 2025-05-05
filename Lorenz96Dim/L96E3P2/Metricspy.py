@@ -13,7 +13,7 @@ from src.scoring_rules import EnergyScore, KernelScore, SignatureKernel, EnergyS
 from src.utils import load_net, estimate_bandwidth_timeseries, lorenz96_variogram, def_loader_kwargs, \
     weatherbench_variogram_haversine
 from src.parsers import parser_predict, define_masks, nonlinearities_dict, setup
-from src.calibration import calibration_error, R2, rmse, plot_metrics_params, CRPS, relative_quantile_error
+from src.calibration import calibration_error, R2, rmse, plot_metrics_params
 from src.weatherbench_utils import load_weatherbench_data
 
 ###############################
@@ -33,10 +33,10 @@ nets_folder = 'results/nets/'
 weatherbench_data_folder = None
 weatherbench_small = False
 
-#name_postfix = '_mytrainedmodelEnergyScore' ##Change this
-name_postfix = '_mytrainedmodelSignatureKernel' ##Change this
+name_postfix = '_mytrainedmodelEnergyScore' ##Change this
+#name_postfix = '_mytrainedmodelSignatureKernel' ##Change this
 training_ensemble_size = 3  #3/10
-prediction_ensemble_size = 20 ##3/10
+prediction_ensemble_size = 3 ##3/10
 prediction_length = 2  
 
 
@@ -207,78 +207,78 @@ if cuda:
 with torch.no_grad():
         #Clearly needs to be fixed
         #print("yo1")
-        #predictions_val = makepredictionsequence(net, input_data_val,prediction_length)
+        predictions_val = makepredictionsequence(net, input_data_val,prediction_length)
         predictions_test = makepredictionsequence(net, input_data_test,prediction_length)
         #predictions_val = net(input_data_val)  # shape (n_val, ensemble_size, data_size)
         #predictions_test = net(input_data_test)  # shape (n_test, ensemble_size, data_size)
-#print(predictions_val.shape) #Current output is 36,20,1 #We need 36,20,9,1
+print(predictions_val.shape) #Current output is 36,20,1 #We need 36,20,9,1
 print(predictions_test.shape)
 print('yo')
 #36,20,9,1
 #38,20,9,1
 
 
-# if method != "regression":
-#     # --- scoring rules ---
+if method != "regression":
+    # --- scoring rules ---
 
-#     # if gamma is None:
-#     #     print("Compute gamma...")
-#     #     gamma = estimate_bandwidth_timeseries(target_data_val, return_values=["median"])
-#     #     print(f"Estimated gamma: {gamma:.4f}")
-#     # if gamma_patched is None and compute_patched:
-#     #     # determine the gamma using the first patch only. This assumes that the values of the variables
-#     #     # are roughly the same in the different patches.
-#     #     gamma_patched = estimate_bandwidth_timeseries(target_data_val[:, masks[0]], return_values=["median"])
-#     #     print(f"Estimated gamma patched: {gamma_patched:.4f}")
+    # if gamma is None:
+    #     print("Compute gamma...")
+    #     gamma = estimate_bandwidth_timeseries(target_data_val, return_values=["median"])
+    #     print(f"Estimated gamma: {gamma:.4f}")
+    # if gamma_patched is None and compute_patched:
+    #     # determine the gamma using the first patch only. This assumes that the values of the variables
+    #     # are roughly the same in the different patches.
+    #     gamma_patched = estimate_bandwidth_timeseries(target_data_val[:, masks[0]], return_values=["median"])
+    #     print(f"Estimated gamma patched: {gamma_patched:.4f}")
 
-#     # instantiate SRs; each SR takes as input: (net_output, target)
-#     sr = SignatureKernel() ##### Could replace with Signature Kernel ##MSEScore ##SignatureKernel #EnergyScorePath
-#     #loss_fn = sr_instance.estimate_score_batch
-#     #scoring_rule = "SignatureKernel" #SignatureKernel
-#     # kernel_gaussian_sr = KernelScore(sigma=gamma)
-#     # kernel_rat_quad_sr = KernelScore(kernel="rational_quadratic", alpha=gamma ** 2)
-#     energy_sr = EnergyScorePath()
+    # instantiate SRs; each SR takes as input: (net_output, target)
+    sr = SignatureKernel() ##### Could replace with Signature Kernel ##MSEScore ##SignatureKernel #EnergyScorePath
+    #loss_fn = sr_instance.estimate_score_batch
+    #scoring_rule = "SignatureKernel" #SignatureKernel
+    # kernel_gaussian_sr = KernelScore(sigma=gamma)
+    # kernel_rat_quad_sr = KernelScore(kernel="rational_quadratic", alpha=gamma ** 2)
+    energy_sr = EnergyScorePath()
 
-#     # variogram = None
-#     # if model in ["lorenz96", ]:
-#     #     variogram = lorenz96_variogram(data_size)
-#     # elif model == "WeatherBench":
-#     #     # variogram = weatherbench_variogram(weatherbench_small=weatherbench_small)
-#     #     variogram = weatherbench_variogram_haversine(weatherbench_small=weatherbench_small)
-#     # if variogram is not None and cuda:
-#     #     variogram = variogram.cuda()
+    # variogram = None
+    # if model in ["lorenz96", ]:
+    #     variogram = lorenz96_variogram(data_size)
+    # elif model == "WeatherBench":
+    #     # variogram = weatherbench_variogram(weatherbench_small=weatherbench_small)
+    #     variogram = weatherbench_variogram_haversine(weatherbench_small=weatherbench_small)
+    # if variogram is not None and cuda:
+    #     variogram = variogram.cuda()
 
-#     # variogram_sr = VariogramScore(variogram=variogram)
+    # variogram_sr = VariogramScore(variogram=variogram)
 
-#     # if compute_patched:
-#     #     # patched SRs:
-#     #     kernel_gaussian_sr_patched = PatchedScoringRule(KernelScore(sigma=gamma_patched), masks)
-#     #     kernel_rat_quad_sr_patched = PatchedScoringRule(
-#     #         KernelScore(kernel="rational_quadratic", alpha=gamma_patched ** 2),
-#     #         masks)
-#     #     energy_sr_patched = PatchedScoringRule(energy_sr, masks)
+    # if compute_patched:
+    #     # patched SRs:
+    #     kernel_gaussian_sr_patched = PatchedScoringRule(KernelScore(sigma=gamma_patched), masks)
+    #     kernel_rat_quad_sr_patched = PatchedScoringRule(
+    #         KernelScore(kernel="rational_quadratic", alpha=gamma_patched ** 2),
+    #         masks)
+    #     energy_sr_patched = PatchedScoringRule(energy_sr, masks)
 
-#     # -- out of sample score --
-#     with torch.no_grad():
-#         string = ""
-#         for name, predictions, target in zip(["VALIDATION", "TEST"], [predictions_val, predictions_test],
-#                                              [target_data_val, target_data_test]):
-#             string += name + "\n"
-#             print(predictions.shape) #36,20,9,1
-#             print(target.shape) #36,9,1
-#             print("yo2")
+    # -- out of sample score --
+    with torch.no_grad():
+        string = ""
+        for name, predictions, target in zip(["VALIDATION", "TEST"], [predictions_val, predictions_test],
+                                             [target_data_val, target_data_test]):
+            string += name + "\n"
+            print(predictions.shape) #36,20,9,1
+            print(target.shape) #36,9,1
+            print("yo2")
 
-#             SigRBFscore = estimate_score_chunks(sr, predictions, target,scaling_mean,scaling_std, chunk_size=1)
-#             #kernel_rat_quad_score = estimate_score_chunks(kernel_rat_quad_sr, predictions, target)
-#             energy_score = estimate_score_chunks(energy_sr, predictions, target,scaling_mean,scaling_std, chunk_size=1)
-#             #variogram_score = estimate_score_chunks(variogram_sr, predictions, target, chunk_size=8)
+            SigRBFscore = estimate_score_chunks(sr, predictions, target,scaling_mean,scaling_std, chunk_size=1)
+            #kernel_rat_quad_score = estimate_score_chunks(kernel_rat_quad_sr, predictions, target)
+            energy_score = estimate_score_chunks(energy_sr, predictions, target,scaling_mean,scaling_std, chunk_size=1)
+            #variogram_score = estimate_score_chunks(variogram_sr, predictions, target, chunk_size=8)
 
-#             string += f"Whole data scores: \nEnergy score: {energy_score:.2f}, " \
-#                       f"Gaussian Kernel score {SigRBFscore:.2f}\n" 
-#                     #   f" Rational quadratic Kernel score {kernel_rat_quad_score:.2f}, " \
-#                     #   f"Variogram score {variogram_score:.2f}\n"
+            string += f"Whole data scores: \nEnergy score: {energy_score:.2f}, " \
+                      f"Gaussian Kernel score {SigRBFscore:.2f}\n" 
+                    #   f" Rational quadratic Kernel score {kernel_rat_quad_score:.2f}, " \
+                    #   f"Variogram score {variogram_score:.2f}\n"
 
-#         print(string)
+        print(string)
 
 with torch.no_grad():
     # -- calibration metrics --
@@ -292,8 +292,8 @@ with torch.no_grad():
     predictions_for_calibration = predictions_test.transpose(1, 0).cpu().detach().numpy()
     target_data_test_for_calibration = target_data_test.cpu().detach().numpy()
 
-    predictions_for_calibration = predictions_for_calibration.reshape(prediction_ensemble_size,1999,data_size*prediction_length)
-    target_data_test_for_calibration = target_data_test_for_calibration.reshape(1999, data_size*prediction_length)
+    predictions_for_calibration = predictions_for_calibration.reshape(prediction_ensemble_size,99,data_size*prediction_length)
+    target_data_test_for_calibration = target_data_test_for_calibration.reshape(99, data_size*prediction_length)
     data_size = predictions_for_calibration.shape[-1]
 
     #print(predictions_for_calibration.shape) #38,9,1
@@ -301,14 +301,12 @@ with torch.no_grad():
     cal_err_values = calibration_error(predictions_for_calibration, target_data_test_for_calibration)
     rmse_values = rmse(predictions_for_calibration, target_data_test_for_calibration)
     r2_values = R2(predictions_for_calibration, target_data_test_for_calibration)
-    crps_values = CRPS(predictions_for_calibration, target_data_test_for_calibration)
-    rqe_values = relative_quantile_error(predictions_for_calibration, target_data_test_for_calibration)
 
     string2 = f"Calibration metrics:\n"
     for i in range(data_size):
-        string2 += f"x{i}: Cal. error {cal_err_values[i]:.4f}, RMSE {rmse_values[i]:.4f}, R2 {r2_values[i]:.4f}, NCRPS {crps_values[i]:.4f}, RQE {rqe_values[i]:.4f}\n"
-    string2 += f"\nAverage values: Cal. error {cal_err_values.mean():.4f}, RMSE {rmse_values.mean():.4f}, R2 {r2_values.mean():.4f}, NCRPS {crps_values.mean():.4f}, RQE {rqe_values.mean():.4f}\n"
-    string2 += f"\nStandard deviation: Cal. error {cal_err_values.std():.4f}, RMSE {rmse_values.std():.4f}, R2 {r2_values.std():.4f}, NCRPS {crps_values.std():.4f}, RQE {rqe_values.std():.4f}\n\n"
+        string2 += f"x{i}: Cal. error {cal_err_values[i]:.4f}, RMSE {rmse_values[i]:.4f}, R2 {r2_values[i]:.4f}\n"
+    string2 += f"\nAverage values: Cal. error {cal_err_values.mean():.4f}, RMSE {rmse_values.mean():.4f}, R2 {r2_values.mean():.4f}\n"
+    string2 += f"\nStandard deviation: Cal. error {cal_err_values.std():.4f}, RMSE {rmse_values.std():.4f}, R2 {r2_values.std():.4f}\n\n"
 
     string2 += f"\nAverage values: Cal. error, RMSE, R2 \n"
     string2 += f"\n\t\t {cal_err_values.mean():.4f} $ \pm$ {cal_err_values.std():.4f} & {rmse_values.mean():.4f}  $ \pm$ {rmse_values.std():.4f} &  {r2_values.mean():.4f} $ \pm$ {r2_values.std():.4f} \\\\ \n"
@@ -324,8 +322,8 @@ with torch.no_grad():
     #     target_data_test = target_data_test[:, variable_list]
     #     predictions_for_calibration = predictions_for_calibration[:, :, variable_list]
     #     target_data_test_for_calibration = target_data_test_for_calibration[:, variable_list]
-    predictions_test = predictions_test.reshape(1999, prediction_ensemble_size,data_size)
-    target_data_test = target_data_test.reshape(1999, data_size)
+    predictions_test = predictions_test.reshape(99, prediction_ensemble_size,data_size)
+    target_data_test = target_data_test.reshape(99, data_size)
     predictions_test_for_plot = predictions_test.cpu()
     target_data_test_for_plot = target_data_test.cpu()
     time_vec = torch.arange(len(predictions_test)).cpu()
@@ -337,8 +335,7 @@ with torch.no_grad():
     #     # todo write here the correct lon and lat coordinates!
     #     var_names = [r"$x_{}$".format(i + 1) for i in range(data_size)]
     # else:
-    #data_size = 2
-    data_size = 8
+    data_size = 3
     var_names = [r"$x_{}$".format(i + 1) for i in range(data_size)]
 
     # predictions: mean +- std
@@ -373,7 +370,7 @@ with torch.no_grad():
 
     # predictions: median and 99% quantile region
     np_predictions = predictions_test_for_plot.detach().numpy()
-    size = 95
+    size = 99
     predictions_median = np.median(np_predictions, axis=1)
     if method != "regression":
         predictions_lower = np.percentile(np_predictions, 50 - size / 2, axis=1)
@@ -422,5 +419,5 @@ with torch.no_grad():
 
     if not model_is_weatherbench:
         # metrics plots
-        plot_metrics_params(cal_err_values, rmse_values, r2_values, crps_values, rqe_values,
+        plot_metrics_params(cal_err_values, rmse_values, r2_values,
                             filename=nets_folder + f"metrics{name_postfix}.png" if save_plots else None)
