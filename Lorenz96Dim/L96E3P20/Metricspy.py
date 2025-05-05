@@ -13,14 +13,14 @@ from src.scoring_rules import EnergyScore, KernelScore, SignatureKernel, EnergyS
 from src.utils import load_net, estimate_bandwidth_timeseries, lorenz96_variogram, def_loader_kwargs, \
     weatherbench_variogram_haversine
 from src.parsers import parser_predict, define_masks, nonlinearities_dict, setup
-from src.calibration import calibration_error, R2, rmse, plot_metrics_params
+from src.calibration import calibration_error, R2, rmse, plot_metrics_params, CRPS
 from src.weatherbench_utils import load_weatherbench_data
 
 ###############################
 # HARDCODED CONFIGURATION
 ###############################
 # Example values, adapt to your needs:
-model = 'lorenz96'
+model = 'lorenz'
 method = 'SR'
 scoring_rule = 'SignatureKernel'
 kernel = 'RBFtest'  ##??
@@ -28,13 +28,13 @@ patched = False
 base_measure = 'normal'
 root_folder = 'results'         # Where results are stored
 model_folder = 'nets'           # Subfolder for models
-datasets_folder = 'results/lorenz96/datasets/'
+datasets_folder = 'results/lorenz/datasets/'
 nets_folder = 'results/nets/'
 weatherbench_data_folder = None
 weatherbench_small = False
 
-name_postfix = '_mytrainedmodelEnergyScore' ##Change this
-#name_postfix = '_mytrainedmodelSignatureKernel' ##Change this
+#name_postfix = '_mytrainedmodelEnergyScore' ##Change this
+name_postfix = '_mytrainedmodelSignatureKernel' ##Change this
 training_ensemble_size = 3  #3/10
 prediction_ensemble_size = 3 ##3/10
 prediction_length = 2  
@@ -55,7 +55,7 @@ cuda = False
 load_all_data_GPU = False
 
 nonlinearity = 'leaky_relu'
-data_size = 8              # For Lorenz63, typically data_size=1 or 3
+data_size = 1              # For Lorenz63, typically data_size=1 or 3
 auxiliary_var_size = 1
 seed = 0
 
@@ -66,7 +66,7 @@ gamma = None
 gamma_patched = None
 patch_size = 16
 no_RNN = False
-hidden_size_rnn = 32
+hidden_size_rnn = 8
 
 save_pdf = True
 
@@ -292,8 +292,8 @@ with torch.no_grad():
     predictions_for_calibration = predictions_test.transpose(1, 0).cpu().detach().numpy()
     target_data_test_for_calibration = target_data_test.cpu().detach().numpy()
 
-    predictions_for_calibration = predictions_for_calibration.reshape(prediction_ensemble_size,99,data_size*prediction_length)
-    target_data_test_for_calibration = target_data_test_for_calibration.reshape(99, data_size*prediction_length)
+    predictions_for_calibration = predictions_for_calibration.reshape(prediction_ensemble_size,1998,data_size*prediction_length)
+    target_data_test_for_calibration = target_data_test_for_calibration.reshape(1998, data_size*prediction_length)
     data_size = predictions_for_calibration.shape[-1]
 
     #print(predictions_for_calibration.shape) #38,9,1
@@ -301,12 +301,13 @@ with torch.no_grad():
     cal_err_values = calibration_error(predictions_for_calibration, target_data_test_for_calibration)
     rmse_values = rmse(predictions_for_calibration, target_data_test_for_calibration)
     r2_values = R2(predictions_for_calibration, target_data_test_for_calibration)
+    crps_values = CRPS(predictions_for_calibration, target_data_test_for_calibration)
 
     string2 = f"Calibration metrics:\n"
     for i in range(data_size):
-        string2 += f"x{i}: Cal. error {cal_err_values[i]:.4f}, RMSE {rmse_values[i]:.4f}, R2 {r2_values[i]:.4f}\n"
-    string2 += f"\nAverage values: Cal. error {cal_err_values.mean():.4f}, RMSE {rmse_values.mean():.4f}, R2 {r2_values.mean():.4f}\n"
-    string2 += f"\nStandard deviation: Cal. error {cal_err_values.std():.4f}, RMSE {rmse_values.std():.4f}, R2 {r2_values.std():.4f}\n\n"
+        string2 += f"x{i}: Cal. error {cal_err_values[i]:.4f}, RMSE {rmse_values[i]:.4f}, R2 {r2_values[i]:.4f}, NCRPS {crps_values[i]:.4f}\n"
+    string2 += f"\nAverage values: Cal. error {cal_err_values.mean():.4f}, RMSE {rmse_values.mean():.4f}, R2 {r2_values.mean():.4f}, NCRPS {crps_values.mean():.4f}\n"
+    string2 += f"\nStandard deviation: Cal. error {cal_err_values.std():.4f}, RMSE {rmse_values.std():.4f}, R2 {r2_values.std():.4f}, NCRPS {crps_values.std():.4f}\n\n"
 
     string2 += f"\nAverage values: Cal. error, RMSE, R2 \n"
     string2 += f"\n\t\t {cal_err_values.mean():.4f} $ \pm$ {cal_err_values.std():.4f} & {rmse_values.mean():.4f}  $ \pm$ {rmse_values.std():.4f} &  {r2_values.mean():.4f} $ \pm$ {r2_values.std():.4f} \\\\ \n"
@@ -322,8 +323,8 @@ with torch.no_grad():
     #     target_data_test = target_data_test[:, variable_list]
     #     predictions_for_calibration = predictions_for_calibration[:, :, variable_list]
     #     target_data_test_for_calibration = target_data_test_for_calibration[:, variable_list]
-    predictions_test = predictions_test.reshape(99, prediction_ensemble_size,data_size)
-    target_data_test = target_data_test.reshape(99, data_size)
+    predictions_test = predictions_test.reshape(1998, prediction_ensemble_size,data_size)
+    target_data_test = target_data_test.reshape(1998, data_size)
     predictions_test_for_plot = predictions_test.cpu()
     target_data_test_for_plot = target_data_test.cpu()
     time_vec = torch.arange(len(predictions_test)).cpu()
@@ -335,7 +336,7 @@ with torch.no_grad():
     #     # todo write here the correct lon and lat coordinates!
     #     var_names = [r"$x_{}$".format(i + 1) for i in range(data_size)]
     # else:
-    data_size = 3
+    data_size = 2
     var_names = [r"$x_{}$".format(i + 1) for i in range(data_size)]
 
     # predictions: mean +- std
@@ -370,7 +371,7 @@ with torch.no_grad():
 
     # predictions: median and 99% quantile region
     np_predictions = predictions_test_for_plot.detach().numpy()
-    size = 99
+    size = 2
     predictions_median = np.median(np_predictions, axis=1)
     if method != "regression":
         predictions_lower = np.percentile(np_predictions, 50 - size / 2, axis=1)
@@ -419,5 +420,5 @@ with torch.no_grad():
 
     if not model_is_weatherbench:
         # metrics plots
-        plot_metrics_params(cal_err_values, rmse_values, r2_values,
+        plot_metrics_params(cal_err_values, rmse_values, r2_values, crps_values,
                             filename=nets_folder + f"metrics{name_postfix}.png" if save_plots else None)
