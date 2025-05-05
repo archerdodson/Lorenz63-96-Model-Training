@@ -1,0 +1,16 @@
+Test SR network for lorenz model using SignatureKernel scoring rule
+Calibration metrics:
+x0: Cal. error 0.1100, RMSE 0.1107, R2 0.5771, NCRPS 0.2398, RQE 12.5366
+x1: Cal. error 0.1300, RMSE 0.1397, R2 0.3264, NCRPS 0.3429, RQE 12.5396
+
+Average values: Cal. error 0.1200, RMSE 0.1252, R2 0.4517, NCRPS 0.2914, RQE 12.5381
+
+Standard deviation: Cal. error 0.0100, RMSE 0.0145, R2 0.1254, NCRPS 0.0516, RQE 0.0015
+
+
+Average values: Cal. error, RMSE, R2 
+
+		 0.1200 $ \pm$ 0.0100 & 0.1252  $ \pm$ 0.0145 &  0.4517 $ \pm$ 0.1254 \\ 
+
+		 0.1200  & 0.1252  &  0.4517  \\ 
+
