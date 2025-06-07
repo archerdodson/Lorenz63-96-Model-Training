@@ -1,4 +1,3 @@
-Test SR network for lorenz96 model using SignatureKernel scoring rule
 Calibration metrics:
 x0: Cal. error 0.2120, RMSE 0.1813, R2 0.2479, NCRPS 0.6473, RQE 10.2101
 x1: Cal. error 0.4250, RMSE 0.5578, R2 -6.4135, NCRPS 3.5008, RQE 4.0429
@@ -58,4 +57,3 @@ RMSE: has_nan=False, has_inf=False, shape=(40,)
 R2: has_nan=False, has_inf=False, shape=(40,)
 NCRPS: has_nan=False, has_inf=False, shape=(40,)
 RQE: has_nan=False, has_inf=False, shape=(40,)
-
